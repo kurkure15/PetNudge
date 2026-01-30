@@ -4,66 +4,77 @@ import SwiftUI
 enum PetCharacter: String, Codable, CaseIterable, Identifiable {
     case cat
     case dog
-    case rabbit
-    case hamster
-    case parrot
-    case fish
+    case redPanda
 
     var id: String { rawValue }
 
     var emoji: String {
         switch self {
-        case .cat:     return "🐱"
-        case .dog:     return "🐶"
-        case .rabbit:  return "🐰"
-        case .hamster: return "🐹"
-        case .parrot:  return "🦜"
-        case .fish:    return "🐠"
+        case .cat:      return "🐱"
+        case .dog:      return "🐶"
+        case .redPanda: return "🦊"
         }
     }
 
     var displayName: String {
         switch self {
-        case .cat:     return "Cat"
-        case .dog:     return "Dog"
-        case .rabbit:  return "Rabbit"
-        case .hamster: return "Hamster"
-        case .parrot:  return "Parrot"
-        case .fish:    return "Fish"
+        case .cat:      return "Budgie"
+        case .dog:      return "Blue"
+        case .redPanda: return "Pabu"
         }
     }
 
-    // MARK: - SF Symbol placeholders (replace with custom assets later)
+    // MARK: - SF Symbol fallbacks
 
     var sfSymbol: String {
         switch self {
-        case .cat:     return "cat.fill"
-        case .dog:     return "dog.fill"
-        case .rabbit:  return "hare.fill"
-        case .hamster: return "pawprint.fill"
-        case .parrot:  return "bird.fill"
-        case .fish:    return "fish.fill"
+        case .cat:      return "cat.fill"
+        case .dog:      return "dog.fill"
+        case .redPanda: return "pawprint.fill"
+        }
+    }
+
+    // MARK: - Custom Asset Names
+    // Naming convention: "{prefix}-Idle", "{prefix}-Watching", "{prefix}-Nudge1", "{prefix}-Nudge2"
+
+    var assetPrefix: String {
+        switch self {
+        case .cat:      return "Budgie"
+        case .dog:      return "Blue"
+        case .redPanda: return "Pabu"
         }
     }
 
     // MARK: - Menu Bar Icons (NSImage)
-    // To replace with custom assets:
-    //   1. Add images to Assets.xcassets named like "cat-idle", "cat-watching", "cat-nudge-1", "cat-nudge-2"
-    //   2. Replace the SF Symbol fallback with: NSImage(named: "\(rawValue)-idle")
 
     /// Icon shown in menu bar when no reminders are near
     var idleIcon: NSImage {
-        menuBarImage(systemName: sfSymbolForState(.idle))
+        if let image = NSImage(named: "\(assetPrefix)-Idle") {
+            image.isTemplate = false
+            return image
+        }
+        return menuBarImage(systemName: sfSymbolForState(.idle))
     }
 
     /// Icon shown ~5 min before a reminder fires
     var watchingIcon: NSImage {
-        menuBarImage(systemName: sfSymbolForState(.watching))
+        if let image = NSImage(named: "\(assetPrefix)-Watching") {
+            image.isTemplate = false
+            return image
+        }
+        return menuBarImage(systemName: sfSymbolForState(.watching))
     }
 
     /// Frames shown when a reminder fires (alternating animation)
     var nudgeFrames: [NSImage] {
-        [
+        let frame1 = NSImage(named: "\(assetPrefix)-Nudge1")
+        let frame2 = NSImage(named: "\(assetPrefix)-Nudge2")
+        if let f1 = frame1, let f2 = frame2 {
+            f1.isTemplate = false
+            f2.isTemplate = false
+            return [f1, f2]
+        }
+        return [
             menuBarImage(systemName: sfSymbolForState(.nudge1)),
             menuBarImage(systemName: sfSymbolForState(.nudge2))
         ]
@@ -75,35 +86,20 @@ enum PetCharacter: String, Codable, CaseIterable, Identifiable {
 
     private func sfSymbolForState(_ state: IconState) -> String {
         switch (self, state) {
-        case (.cat, .idle):       return "cat"
-        case (.cat, .watching):   return "cat.fill"
-        case (.cat, .nudge1):     return "cat.fill"
-        case (.cat, .nudge2):     return "exclamationmark.bubble.fill"
+        case (.cat, .idle):        return "cat"
+        case (.cat, .watching):    return "cat.fill"
+        case (.cat, .nudge1):      return "cat.fill"
+        case (.cat, .nudge2):      return "exclamationmark.bubble.fill"
 
-        case (.dog, .idle):       return "dog"
-        case (.dog, .watching):   return "dog.fill"
-        case (.dog, .nudge1):     return "dog.fill"
-        case (.dog, .nudge2):     return "exclamationmark.bubble.fill"
+        case (.dog, .idle):        return "dog"
+        case (.dog, .watching):    return "dog.fill"
+        case (.dog, .nudge1):      return "dog.fill"
+        case (.dog, .nudge2):      return "exclamationmark.bubble.fill"
 
-        case (.rabbit, .idle):    return "hare"
-        case (.rabbit, .watching): return "hare.fill"
-        case (.rabbit, .nudge1):  return "hare.fill"
-        case (.rabbit, .nudge2):  return "exclamationmark.bubble.fill"
-
-        case (.hamster, .idle):   return "pawprint"
-        case (.hamster, .watching): return "pawprint.fill"
-        case (.hamster, .nudge1): return "pawprint.fill"
-        case (.hamster, .nudge2): return "exclamationmark.bubble.fill"
-
-        case (.parrot, .idle):    return "bird"
-        case (.parrot, .watching): return "bird.fill"
-        case (.parrot, .nudge1):  return "bird.fill"
-        case (.parrot, .nudge2):  return "exclamationmark.bubble.fill"
-
-        case (.fish, .idle):      return "fish"
-        case (.fish, .watching):  return "fish.fill"
-        case (.fish, .nudge1):    return "fish.fill"
-        case (.fish, .nudge2):    return "exclamationmark.bubble.fill"
+        case (.redPanda, .idle):   return "pawprint"
+        case (.redPanda, .watching): return "pawprint.fill"
+        case (.redPanda, .nudge1): return "pawprint.fill"
+        case (.redPanda, .nudge2): return "exclamationmark.bubble.fill"
         }
     }
 
@@ -115,7 +111,6 @@ enum PetCharacter: String, Codable, CaseIterable, Identifiable {
             configured.isTemplate = true
             return configured
         }
-        // Fallback: render emoji into an image
         return emojiImage(emoji, size: NSSize(width: 18, height: 18))
     }
 

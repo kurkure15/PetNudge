@@ -17,8 +17,10 @@ struct SettingsView: View {
                         ForEach(PetCharacter.allCases) { character in
                             Button(action: { viewModel.updateCharacter(character) }) {
                                 VStack(spacing: 4) {
-                                    Text(character.emoji)
-                                        .font(.title)
+                                    Image(nsImage: character.idleIcon)
+                                        .resizable()
+                                        .interpolation(.high)
+                                        .frame(width: 28, height: 28)
                                     Text(character.displayName)
                                         .font(.caption2)
                                 }

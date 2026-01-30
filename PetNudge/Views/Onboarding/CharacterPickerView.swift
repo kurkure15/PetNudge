@@ -24,8 +24,10 @@ struct CharacterPickerView: View {
                 ForEach(PetCharacter.allCases) { character in
                     Button(action: { selectedCharacter = character }) {
                         VStack(spacing: 8) {
-                            Text(character.emoji)
-                                .font(.system(size: 48))
+                            Image(nsImage: character.idleIcon)
+                                .resizable()
+                                .interpolation(.high)
+                                .frame(width: 48, height: 48)
                             Text(character.displayName)
                                 .font(.caption)
                                 .foregroundStyle(.primary)
