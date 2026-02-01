@@ -14,3 +14,6 @@ DerivedData/
 
 # macOS
 .DS_Store
+
+# MCP config (contains API keys)
+.mcp.json

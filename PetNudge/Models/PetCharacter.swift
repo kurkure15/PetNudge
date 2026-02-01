@@ -2,8 +2,8 @@ import AppKit
 import SwiftUI
 
 enum PetCharacter: String, Codable, CaseIterable, Identifiable {
-    case cat
     case dog
+    case cat
     case redPanda
 
     var id: String { rawValue }
@@ -57,6 +57,83 @@ enum PetCharacter: String, Codable, CaseIterable, Identifiable {
 
     var selectedImageName: String {
         return "\(assetPrefix)-Selected"
+    }
+
+    // MARK: - Design Tokens (from Figma)
+
+    /// Character name font size — Blue is 208pt (shorter name), others 160pt
+    var nameFontSize: CGFloat {
+        switch self {
+        case .dog:      return 208
+        case .cat:      return 160
+        case .redPanda: return 160
+        }
+    }
+
+    /// Background gradient top color for character selection (Step 0)
+    var gradientTopHex: String {
+        switch self {
+        case .dog:      return "051184"
+        case .cat:      return "5E3307"
+        case .redPanda: return "0F6A43"
+        }
+    }
+
+    /// Background gradient top color for first reminder (Step 1) — darker variant
+    var step1GradientTopHex: String {
+        switch self {
+        case .dog:      return "061937"
+        case .cat:      return "5E3307"
+        case .redPanda: return "0F6A43"
+        }
+    }
+
+    /// Button background color (matches gradient top)
+    var buttonHex: String { gradientTopHex }
+
+    /// Accent color for editable text on Step 1
+    var accentHex: String {
+        switch self {
+        case .dog:      return "5B97F7"
+        case .cat:      return "FFB260"
+        case .redPanda: return "60DCA6"
+        }
+    }
+
+    /// Name text gradient — top color
+    var nameGradientTopHex: String {
+        switch self {
+        case .dog:      return "AFCDFF"
+        case .cat:      return "5E3307"
+        case .redPanda: return "0F6A43"
+        }
+    }
+
+    /// Name text shadow color
+    var nameShadowColor: (red: Double, green: Double, blue: Double, opacity: Double) {
+        switch self {
+        case .dog:      return (198/255, 219/255, 252/255, 1.0)
+        case .cat:      return (94/255, 51/255, 7/255, 0.3)
+        case .redPanda: return (15/255, 106/255, 67/255, 0.3)
+        }
+    }
+
+    /// Selected circle border stroke color
+    var selectedStrokeHex: String {
+        switch self {
+        case .dog:      return "6B74BF"
+        case .cat:      return "A15D18"
+        case .redPanda: return "0C804E"
+        }
+    }
+
+    /// Unselected circle border stroke color
+    var unselectedStrokeHex: String {
+        switch self {
+        case .dog:      return "2C3056"
+        case .cat:      return "3C2309"
+        case .redPanda: return "073D22"
+        }
     }
 
     // MARK: - Menu Bar Icons (NSImage)

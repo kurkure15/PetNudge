@@ -10,191 +10,210 @@ struct CharacterSelectionView: View {
             characterGradient
                 .ignoresSafeArea()
 
-            // Main layout
-            VStack(spacing: 0) {
+            // Main layout — absolute positioning to match Figma
+            ZStack(alignment: .topLeading) {
 
-                // Top bar: Settings (left) and Close (right)
-                HStack {
-                    Button(action: {}) {
-                        Image("ic_Setting")
-                            .resizable()
-                            .interpolation(.high)
-                            .frame(width: 24, height: 24)
-                    }
-                    .buttonStyle(.plain)
-
-                    Spacer()
-
-                    Button(action: {}) {
-                        Image("ic_cross")
-                            .resizable()
-                            .interpolation(.high)
-                            .frame(width: 24, height: 24)
-                    }
-                    .buttonStyle(.plain)
+                // MARK: - Close button (top-left, 48x48 at 24,24)
+                Button(action: {}) {
+                    Image("ic_cross")
+                        .resizable()
+                        .interpolation(.high)
+                        .frame(width: 24, height: 24)
+                        .frame(width: 48, height: 48)
                 }
-                .padding(.horizontal, 24)
-                .padding(.top, 16)
+                .buttonStyle(.plain)
+                .position(x: 24 + 24, y: 24 + 24)
 
-                // Content area
-                HStack(spacing: 0) {
+                // MARK: - Settings button (top-right, 48x48 at 1128,24)
+                Button(action: {}) {
+                    Image(systemName: "gearshape.fill")
+                        .font(.system(size: 20, weight: .black))
+                        .foregroundColor(.white)
+                        .frame(width: 48, height: 48)
+                }
+                .buttonStyle(.plain)
+                .position(x: 1128 + 24, y: 24 + 24)
 
-                    // LEFT SIDE: Large name + character scene
-                    ZStack(alignment: .topLeading) {
-                        // Character scene image (bottom-left)
-                        Image(selectedCharacter.sceneImageName)
-                            .resizable()
-                            .interpolation(.high)
-                            .aspectRatio(contentMode: .fit)
-                            .frame(maxHeight: 420)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
-                            .padding(.leading, 20)
-                            .padding(.bottom, 20)
+                // MARK: - Left side: Character name + Scene image
 
-                        // Large decorative character name (160px, serif)
-                        Text(selectedCharacter.displayName)
-                            .font(.custom("Source Serif 4", size: 160).weight(.black))
-                            .foregroundColor(.white)
-                            .shadow(color: .black.opacity(0.4), radius: 8, x: 0, y: 4)
-                            .padding(.leading, 32)
-                            .padding(.top, 0)
-                    }
-                    .frame(maxWidth: .infinity)
+                // Large decorative character name with gradient fill
+                Text(selectedCharacter.displayName)
+                    .font(.custom("Source Serif Pro", size: selectedCharacter.nameFontSize).weight(.black))
+                    .foregroundStyle(nameGradient)
+                    .shadow(
+                        color: Color(
+                            red: selectedCharacter.nameShadowColor.red,
+                            green: selectedCharacter.nameShadowColor.green,
+                            blue: selectedCharacter.nameShadowColor.blue,
+                            opacity: selectedCharacter.nameShadowColor.opacity
+                        ),
+                        radius: 3, x: 2, y: 5
+                    )
+                    .position(
+                        x: selectedCharacter == .dog ? 275 : 284,
+                        y: selectedCharacter == .dog ? 177 : 177
+                    )
 
-                    // RIGHT SIDE: Clouds, "Select a character", thumbnails
-                    VStack(alignment: .center, spacing: 0) {
-                        // Cloud & Sun decorative (top-right)
-                        HStack(spacing: -20) {
-                            Image("SmallCloud")
-                                .resizable()
-                                .interpolation(.high)
-                                .aspectRatio(contentMode: .fit)
-                                .frame(height: 40)
+                // Character scene image (400x400, bottom-left area)
+                Image(selectedCharacter.sceneImageName)
+                    .resizable()
+                    .interpolation(.high)
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 400, height: 400)
+                    .position(x: 249, y: 400)
 
-                            Image("CloudAndSun")
-                                .resizable()
-                                .interpolation(.high)
-                                .aspectRatio(contentMode: .fit)
-                                .frame(height: 80)
-                        }
-                        .padding(.top, 10)
+                // MARK: - Cloud decorations (right side)
 
-                        // Medium cloud (separate, offset right)
-                        HStack {
-                            Spacer()
-                            Image("MediumCloud")
-                                .resizable()
-                                .interpolation(.high)
-                                .aspectRatio(contentMode: .fit)
-                                .frame(height: 60)
-                        }
-                        .padding(.trailing, -10)
-                        .padding(.top, -10)
+                // Cloud & Sun (top-right area)
+                Image("CloudAndSun")
+                    .resizable()
+                    .interpolation(.high)
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 378, height: 185)
+                    .position(x: 963, y: 121)
 
-                        Spacer()
+                // Medium cloud
+                Image("MediumCloud")
+                    .resizable()
+                    .interpolation(.high)
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 132, height: 86)
+                    .position(x: 590, y: 59)
 
-                        // "Select a character" text - Inter font, 24px
+                // Small cloud
+                Image("SmallCloud")
+                    .resizable()
+                    .interpolation(.high)
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 81, height: 38)
+                    .position(x: 336, y: 121)
+
+                // MARK: - Right side: "Select a character" + Circles + Button
+                // 3 circles * 180px + 2 gaps * 32px = 604px total width
+
+                VStack(alignment: .leading, spacing: 40) {
+                    // Top section: label + circle picker
+                    VStack(alignment: .leading, spacing: 24) {
+                        // "Select a character" — SF Pro, 24pt, semibold (590)
                         Text("Select a character")
-                            .font(.system(size: 24, weight: .semibold, design: .default))
+                            .font(.system(size: 24, weight: .semibold))
                             .foregroundColor(.white)
-                            .padding(.bottom, 24)
 
-                        // Character selection thumbnails (circle assets)
-                        HStack(spacing: 16) {
+                        // Character selection circles (144x144 inner, 32px gap)
+                        HStack(spacing: 32) {
                             ForEach(PetCharacter.allCases) { character in
                                 Button(action: {
                                     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                                         selectedCharacter = character
                                     }
                                 }) {
-                                    // Use Selected image if selected, Circle image if not
-                                    Image(selectedCharacter == character
-                                          ? "\(character.assetPrefix)-Selected"
-                                          : "\(character.assetPrefix)-Circle")
-                                        .resizable()
-                                        .interpolation(.high)
-                                        .aspectRatio(contentMode: .fit)
-                                        .frame(width: 80, height: 80)
-                                        .scaleEffect(selectedCharacter == character ? 1.08 : 1.0)
+                                    characterCircle(for: character)
                                 }
                                 .buttonStyle(.plain)
                             }
                         }
-
-                        Spacer()
                     }
-                    .frame(width: 340)
-                    .padding(.trailing, 40)
-                }
 
-                // Bottom: "Continue with [Name]" button — full width
-                Button(action: onComplete) {
-                    Text("Continue with \(selectedCharacter.displayName)")
-                        .font(.system(size: 18, weight: .semibold, design: .default))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 52)
-                        .background(characterButtonColor)
-                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    // "Continue with [Name]" button — full width matching circles row
+                    Button(action: onComplete) {
+                        Text("Continue with \(selectedCharacter.displayName)")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(.white)
+                            .frame(width: 604)
+                            .padding(.vertical, 24)
+                            .background(Color(hex: selectedCharacter.buttonHex))
+                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
-                .padding(.horizontal, 32)
-                .padding(.bottom, 24)
+                .frame(width: 604)
+                .position(x: 900, y: 385)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                .stroke(
+                    LinearGradient(
+                        stops: [
+                            .init(color: .white.opacity(0.3), location: 0),
+                            .init(color: .black.opacity(0.3), location: 0.17),
+                            .init(color: .black.opacity(0.3), location: 0.80),
+                            .init(color: .white.opacity(0.3), location: 1.0)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1
+                )
         )
     }
 
-    // MARK: - Character-specific dark gradients
+    // MARK: - Character circle with selection ring
 
-    private var characterGradient: LinearGradient {
-        switch selectedCharacter {
-        case .dog: // Blue - from Figma: #051184 → #000
-            return LinearGradient(
-                colors: [
-                    Color(hex: "051184"),
-                    Color(hex: "000000")
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-        case .cat: // Budgie - warm dark brown/amber
-            return LinearGradient(
-                colors: [
-                    Color(hex: "5C3A0E"),
-                    Color(hex: "000000")
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-        case .redPanda: // Pabu - dark emerald green
-            return LinearGradient(
-                colors: [
-                    Color(hex: "0A5C3A"),
-                    Color(hex: "000000")
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
+    @ViewBuilder
+    private func characterCircle(for character: PetCharacter) -> some View {
+        let isSelected = selectedCharacter == character
+
+        if isSelected {
+            // SELECTED: 180x180 outer ring (stroke only) + 144x144 inner ring (stroke only)
+            ZStack {
+                // Outer ring — stroke only, no fill
+                Circle()
+                    .stroke(Color(hex: selectedCharacter.unselectedStrokeHex), lineWidth: 1)
+                    .frame(width: 180, height: 180)
+
+                // Inner ring — stroke only, no fill
+                Circle()
+                    .stroke(Color(hex: selectedCharacter.selectedStrokeHex), lineWidth: 1)
+                    .frame(width: 144, height: 144)
+
+                // Character image clipped to circle, inside the inner ring
+                Image(character.circleImageName)
+                    .resizable()
+                    .interpolation(.high)
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 140, height: 140)
+                    .clipShape(Circle())
+            }
+            .frame(width: 180, height: 180)
+        } else {
+            // UNSELECTED: just 144x144 circle, no rings
+            Image(character.circleImageName)
+                .resizable()
+                .interpolation(.high)
+                .aspectRatio(contentMode: .fill)
+                .frame(width: 144, height: 144)
+                .clipShape(Circle())
+                .frame(width: 180, height: 180)
         }
     }
 
-    // MARK: - Character-specific button colors
+    // MARK: - Character-specific background gradient
 
-    private var characterButtonColor: Color {
-        switch selectedCharacter {
-        case .dog:
-            return Color(hex: "1A2E8A")
-        case .cat:
-            return Color(hex: "7A5020")
-        case .redPanda:
-            return Color(hex: "1A7A4A")
-        }
+    private var characterGradient: LinearGradient {
+        LinearGradient(
+            colors: [
+                Color(hex: selectedCharacter.gradientTopHex),
+                Color(hex: "000000")
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+    }
+
+    // MARK: - Character name text gradient
+
+    private var nameGradient: LinearGradient {
+        LinearGradient(
+            stops: [
+                .init(color: Color(hex: selectedCharacter.nameGradientTopHex), location: 0),
+                .init(color: .white, location: 0.75)
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+        )
     }
 }
 

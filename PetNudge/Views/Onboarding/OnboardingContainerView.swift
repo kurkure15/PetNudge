@@ -8,8 +8,8 @@ struct OnboardingContainerView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Progress dots (hidden on step 1)
-            if currentStep != 1 {
+            // Progress dots (only shown on step 2 — steps 0 and 1 are full-bleed)
+            if currentStep == 2 {
                 HStack(spacing: 8) {
                     ForEach(0..<3, id: \.self) { step in
                         Capsule()

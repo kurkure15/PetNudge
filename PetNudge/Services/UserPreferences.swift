@@ -40,7 +40,7 @@ final class UserPreferences: ObservableObject {
         self.hasCompletedOnboarding = defaults.bool(forKey: Keys.hasCompletedOnboarding)
 
         let charRaw = defaults.string(forKey: Keys.selectedCharacter) ?? PetCharacter.cat.rawValue
-        self.selectedCharacter = PetCharacter(rawValue: charRaw) ?? .cat
+        self.selectedCharacter = PetCharacter(rawValue: charRaw) ?? .dog
 
         self.notificationsEnabled = defaults.object(forKey: Keys.notificationsEnabled) as? Bool ?? true
         self.menuBarAnimationEnabled = defaults.object(forKey: Keys.menuBarAnimationEnabled) as? Bool ?? true
