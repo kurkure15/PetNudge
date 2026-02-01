@@ -75,8 +75,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let hostingController = NSHostingController(rootView: onboardingView)
         let window = NSWindow(contentViewController: hostingController)
         window.title = "Welcome to PetNudge"
-        window.setContentSize(NSSize(width: 480, height: 560))
+        window.setContentSize(NSSize(width: 1200, height: 640))
         window.styleMask = [.titled, .closable]
+        window.titlebarAppearsTransparent = true
+        window.titleVisibility = .hidden
+        window.isOpaque = false
+        window.backgroundColor = .clear
         window.center()
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)

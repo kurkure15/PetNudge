@@ -8,22 +8,33 @@ struct OnboardingContainerView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Progress dots
-            HStack(spacing: 8) {
-                ForEach(0..<2, id: \.self) { step in
-                    Capsule()
-                        .fill(step <= currentStep ? Color.accentColor : Color.gray.opacity(0.3))
-                        .frame(height: 4)
+            // Progress dots (hidden on step 1)
+            if currentStep != 1 {
+                HStack(spacing: 8) {
+                    ForEach(0..<3, id: \.self) { step in
+                        Capsule()
+                            .fill(step <= currentStep ? Color.accentColor : Color.gray.opacity(0.3))
+                            .frame(height: 4)
+                    }
                 }
+                .padding(.horizontal, 32)
+                .padding(.top, 24)
             }
-            .padding(.horizontal, 32)
-            .padding(.top, 24)
 
             // Step content
             if currentStep == 0 {
-                CharacterPickerView(
+                CharacterSelectionView(
                     selectedCharacter: $preferences.selectedCharacter,
-                    onNext: { withAnimation { currentStep = 1 } }
+                    onComplete: { withAnimation { currentStep = 1 } }
+                )
+            } else if currentStep == 1 {
+                FirstReminderView(
+                    character: preferences.selectedCharacter,
+                    onReminderCreated: { reminder in
+                        preferences.reminders.append(reminder)
+                        withAnimation { currentStep = 2 }
+                    },
+                    onClose: onComplete
                 )
             } else {
                 ReminderSetupView(
@@ -32,6 +43,6 @@ struct OnboardingContainerView: View {
                 )
             }
         }
-        .frame(width: 480, height: 520)
+        .frame(width: 1200, height: 640)
     }
 }

@@ -45,6 +45,20 @@ enum PetCharacter: String, Codable, CaseIterable, Identifiable {
         }
     }
 
+    // MARK: - Selection Screen Assets
+
+    var sceneImageName: String {
+        return "\(assetPrefix)-Scene"
+    }
+
+    var circleImageName: String {
+        return "\(assetPrefix)-Circle"
+    }
+
+    var selectedImageName: String {
+        return "\(assetPrefix)-Selected"
+    }
+
     // MARK: - Menu Bar Icons (NSImage)
 
     /// Icon shown in menu bar when no reminders are near
