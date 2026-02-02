@@ -101,6 +101,8 @@ struct FirstReminderView: View {
     @State private var showTimePicker = false
     @State private var hasEdited = false
     @State private var isTaskFieldFocused: Bool = false
+    @State private var wiggleTrigger = 0
+    @State private var wiggleTimer: Timer?
 
     // Default task text per character (from Figma)
     private var defaultTaskText: String {
@@ -301,14 +303,25 @@ struct FirstReminderView: View {
                 // MARK: - Next button (bottom-right, appears when task has text)
                 if !taskText.trimmingCharacters(in: .whitespaces).isEmpty {
                     Button(action: createReminder) {
-                        Image("ic_Next")
-                            .resizable()
-                            .interpolation(.high)
+                        Image(systemName: "chevron.right.circle.fill")
+                            .font(.system(size: 36, weight: .bold))
+                            .foregroundColor(.white)
                             .frame(width: 48, height: 48)
-                            .symbolEffect(.breathe.plain.byLayer, options: .repeat(.continuous))
+                            .symbolEffect(.wiggle, value: wiggleTrigger)
                     }
                     .buttonStyle(.plain)
                     .position(x: 1112 + 24, y: 568 + 24)
+                    .onChange(of: isTaskFieldFocused) { _, focused in
+                        if !focused {
+                            wiggleTrigger += 1
+                            wiggleTimer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { _ in
+                                Task { @MainActor in wiggleTrigger += 1 }
+                            }
+                        } else {
+                            wiggleTimer?.invalidate()
+                            wiggleTimer = nil
+                        }
+                    }
                 }
             }
         }
