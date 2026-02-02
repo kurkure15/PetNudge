@@ -34,7 +34,7 @@ struct OnboardingContainerView: View {
                         preferences.reminders.append(reminder)
                         withAnimation { currentStep = 2 }
                     },
-                    onClose: onComplete
+                    onBack: { withAnimation { currentStep = 0 } }
                 )
             } else {
                 ReminderSetupView(

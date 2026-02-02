@@ -3,7 +3,7 @@ import SwiftUI
 struct FirstReminderView: View {
     let character: PetCharacter
     let onReminderCreated: (Reminder) -> Void
-    let onClose: () -> Void
+    let onBack: () -> Void
 
     @State private var taskText: String = ""
     @State private var selectedDate: Date = Date()
@@ -24,24 +24,6 @@ struct FirstReminderView: View {
         case .dog:      return "Drink Water"
         case .cat:      return "Water my Plants"
         case .redPanda: return "Feed my Cat"
-        }
-    }
-
-    // Default day text per character (from Figma)
-    private var defaultDayText: String {
-        switch character {
-        case .dog:      return "Today"
-        case .cat:      return "Today"
-        case .redPanda: return "Tomorrow"
-        }
-    }
-
-    // Default time per character (from Figma)
-    private var defaultTimeText: String {
-        switch character {
-        case .dog:      return "10:00 AM"
-        case .cat:      return "06:00 PM"
-        case .redPanda: return "11:30 AM"
         }
     }
 
@@ -88,11 +70,15 @@ struct FirstReminderView: View {
                 endPoint: .bottom
             )
             .ignoresSafeArea()
+            .contentShape(Rectangle())
+            .onTapGesture {
+                isTaskFieldFocused = false
+            }
 
             ZStack(alignment: .topLeading) {
-                // MARK: - Close button (top-left, 48x48 at 24,24)
-                Button(action: onClose) {
-                    Image("ic_cross")
+                // MARK: - Back button (top-left, 48x48 at 24,24)
+                Button(action: onBack) {
+                    Image("ic_Back")
                         .resizable()
                         .interpolation(.high)
                         .frame(width: 48, height: 48)
@@ -124,76 +110,107 @@ struct FirstReminderView: View {
                                 .font(.system(size: 20, weight: .heavy))
                                 .foregroundColor(.white)
 
-                            // Editable task text — SF Pro, weight 1000 (black), 24pt, accent color, underlined
-                            TextField("", text: $taskText)
-                                .font(.system(size: 24, weight: .black))
-                                .foregroundColor(accentColor)
-                                .focused($isTaskFieldFocused)
-                                .textFieldStyle(.plain)
-                                .overlay(
-                                    Rectangle()
-                                        .frame(height: 0.5)
+                            // Editable task text — SF Pro, weight 1000 (black), 24pt, accent color, single-line
+                            ZStack(alignment: .leading) {
+                                // Placeholder in accent color (shown when empty and not editing)
+                                if taskText.isEmpty && !isTaskFieldFocused {
+                                    Text(defaultTaskText)
+                                        .font(.system(size: 24, weight: .black))
                                         .foregroundColor(accentColor)
-                                        .opacity(isTaskFieldFocused ? 0 : 1),
-                                    alignment: .bottom
-                                )
+                                        .lineLimit(1)
+                                        .underline(true, color: accentColor)
+                                }
+
+                                // TextField always present (hidden behind display text when not focused)
+                                TextField("", text: $taskText)
+                                    .font(.system(size: 24, weight: .black))
+                                    .foregroundColor(accentColor)
+                                    .focused($isTaskFieldFocused)
+                                    .textFieldStyle(.plain)
+                                    .lineLimit(1)
+                                    .opacity(isTaskFieldFocused ? 1 : 0)
+
+                                // Display text when not focused: shows from start, truncated at tail
+                                if !isTaskFieldFocused && !taskText.isEmpty {
+                                    Text(taskText)
+                                        .font(.system(size: 24, weight: .black))
+                                        .foregroundColor(accentColor)
+                                        .lineLimit(1)
+                                        .truncationMode(.tail)
+                                        .contentShape(Rectangle())
+                                        .onTapGesture { isTaskFieldFocused = true }
+                                }
+                            }
                         }
 
                         // "[Day] at [Time]"
                         HStack(alignment: .center, spacing: 8) {
-                            Button(action: { showDatePicker = true }) {
+                            Button(action: { showDatePicker.toggle() }) {
                                 Text(dayString)
                                     .font(.system(size: 24, weight: .black))
                                     .foregroundColor(accentColor)
-                                    .underline(true, color: accentColor)
+                                    .lineLimit(1)
+                                    .fixedSize()
                             }
                             .buttonStyle(.plain)
+                            .popover(isPresented: $showDatePicker) {
+                                DatePicker("", selection: $selectedDate, displayedComponents: .date)
+                                    .datePickerStyle(.graphical)
+                                    .labelsHidden()
+                                    .padding()
+                            }
 
                             Text("at")
                                 .font(.system(size: 20, weight: .heavy))
                                 .foregroundColor(.white)
 
-                            Button(action: { showTimePicker = true }) {
+                            Button(action: { showTimePicker.toggle() }) {
                                 Text(timeString)
                                     .font(.system(size: 24, weight: .black))
                                     .foregroundColor(accentColor)
-                                    .underline(true, color: accentColor)
                             }
                             .buttonStyle(.plain)
+                            .popover(isPresented: $showTimePicker) {
+                                DatePicker("", selection: $selectedTime, displayedComponents: .hourAndMinute)
+                                    .datePickerStyle(.graphical)
+                                    .labelsHidden()
+                                    .padding()
+                            }
                         }
                     }
                 }
                 .frame(width: 285, alignment: .leading)
                 .position(x: 600, y: 303)
 
-                // MARK: - "Set Reminder" button (below sentence builder)
-                Button(action: createReminder) {
-                    Text("Set Reminder")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.white)
-                        .frame(width: 285)
-                        .padding(.vertical, 24)
-                        .background(Color(hex: character.buttonHex))
-                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                }
-                .buttonStyle(.plain)
-                .position(x: 600, y: 430)
+                // MARK: - Hint with character thumbnail (shown when task is empty)
+                if taskText.trimmingCharacters(in: .whitespaces).isEmpty {
+                    HStack(alignment: .center, spacing: 8) {
+                        // Character message thumbnail (~36x36)
+                        Image(character.messageImageName)
+                            .resizable()
+                            .interpolation(.high)
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 36, height: 36)
 
-                // MARK: - Hint with character thumbnail (bottom-right)
-                HStack(alignment: .center, spacing: 8) {
-                    // Character message thumbnail (~36x36)
-                    Image(character.messageImageName)
-                        .resizable()
-                        .interpolation(.high)
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 36, height: 36)
-
-                    // Hint text — SF Pro Rounded, 700 weight (bold), 10pt, accent color
-                    Text(hintText)
-                        .font(.system(size: 10, weight: .bold, design: .rounded))
-                        .foregroundColor(accentColor)
+                        // Hint text — SF Pro Rounded, 700 weight (bold), 10pt, accent color
+                        Text(hintText)
+                            .font(.system(size: 10, weight: .bold, design: .rounded))
+                            .foregroundColor(accentColor)
+                    }
+                    .position(x: hintXPosition, y: 592)
                 }
-                .position(x: hintXPosition, y: 592)
+
+                // MARK: - Next button (bottom-right, appears when task has text)
+                if !taskText.trimmingCharacters(in: .whitespaces).isEmpty {
+                    Button(action: createReminder) {
+                        Image("ic_Next")
+                            .resizable()
+                            .interpolation(.high)
+                            .frame(width: 48, height: 48)
+                    }
+                    .buttonStyle(.plain)
+                    .position(x: 1112 + 24, y: 568 + 24)
+                }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -215,9 +232,6 @@ struct FirstReminderView: View {
                 )
         )
         .onAppear {
-            if taskText.isEmpty {
-                taskText = defaultTaskText
-            }
             // Set per-character default date
             if character == .redPanda {
                 selectedDate = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
@@ -236,18 +250,6 @@ struct FirstReminderView: View {
                 timeComponents.minute = 30
             }
             selectedTime = Calendar.current.date(from: timeComponents) ?? selectedTime
-        }
-        .sheet(isPresented: $showDatePicker) {
-            DatePickerSheet(
-                selectedDate: $selectedDate,
-                isPresented: $showDatePicker
-            )
-        }
-        .sheet(isPresented: $showTimePicker) {
-            TimePickerSheet(
-                selectedTime: $selectedTime,
-                isPresented: $showTimePicker
-            )
         }
     }
 
@@ -271,7 +273,7 @@ struct FirstReminderView: View {
             return "Tomorrow"
         } else {
             let formatter = DateFormatter()
-            formatter.dateFormat = "EEEE"
+            formatter.dateFormat = "dd/MM"
             return formatter.string(from: selectedDate)
         }
     }
@@ -296,75 +298,3 @@ struct FirstReminderView: View {
     }
 }
 
-// MARK: - Date Picker Sheet
-
-struct DatePickerSheet: View {
-    @Binding var selectedDate: Date
-    @Binding var isPresented: Bool
-
-    var body: some View {
-        VStack(spacing: 20) {
-            Text("Select Date")
-                .font(.headline)
-                .padding(.top)
-
-            DatePicker(
-                "Date",
-                selection: $selectedDate,
-                displayedComponents: .date
-            )
-            .datePickerStyle(.graphical)
-            .padding()
-
-            Button("Done") {
-                isPresented = false
-            }
-            .buttonStyle(.borderedProminent)
-            .padding(.bottom)
-        }
-        .frame(width: 400, height: 400)
-    }
-}
-
-// MARK: - Time Picker Sheet
-
-struct TimePickerSheet: View {
-    @Binding var selectedTime: Date
-    @Binding var isPresented: Bool
-
-    var body: some View {
-        VStack(spacing: 20) {
-            Text("Select Time")
-                .font(.headline)
-                .padding(.top)
-
-            DatePicker(
-                "Time",
-                selection: $selectedTime,
-                displayedComponents: .hourAndMinute
-            )
-            .datePickerStyle(.graphical)
-            .padding()
-
-            Button("Done") {
-                isPresented = false
-            }
-            .buttonStyle(.borderedProminent)
-            .padding(.bottom)
-        }
-        .frame(width: 300, height: 300)
-    }
-}
-
-// MARK: - Triangle Shape for Speech Bubble
-
-struct Triangle: Shape {
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        path.move(to: CGPoint(x: rect.midX, y: rect.maxY))
-        path.addLine(to: CGPoint(x: rect.minX, y: rect.minY))
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
-        path.closeSubpath()
-        return path
-    }
-}
