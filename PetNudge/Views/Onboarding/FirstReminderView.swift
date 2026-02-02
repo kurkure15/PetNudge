@@ -16,6 +16,7 @@ struct FirstReminderView: View {
 
     @State private var showDatePicker = false
     @State private var showTimePicker = false
+    @State private var hasEdited = false
     @FocusState private var isTaskFieldFocused: Bool
 
     // Default task text per character (from Figma)
@@ -97,50 +98,55 @@ struct FirstReminderView: View {
                 .position(x: 1128 + 24, y: 24 + 24)
 
                 // MARK: - Sentence builder (centered, width 285, at x:457.5 y:271)
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: 12) {
                     // "Hey [Name]," — SF Pro, weight 860 (heavy), 20pt
                     Text("Hey \(character.displayName),")
                         .font(.system(size: 20, weight: .heavy))
                         .foregroundColor(.white)
 
                     // "Remind me to [Task]"
-                    VStack(alignment: .leading, spacing: 8) {
+                    VStack(alignment: .leading, spacing: 4) {
                         HStack(alignment: .center, spacing: 8) {
                             Text("Remind me to")
                                 .font(.system(size: 20, weight: .heavy))
                                 .foregroundColor(.white)
+                                .fixedSize()
 
                             // Editable task text — SF Pro, weight 1000 (black), 24pt, accent color, single-line
                             ZStack(alignment: .leading) {
-                                // Placeholder in accent color (shown when empty and not editing)
-                                if taskText.isEmpty && !isTaskFieldFocused {
-                                    Text(defaultTaskText)
-                                        .font(.system(size: 24, weight: .black))
-                                        .foregroundColor(accentColor)
-                                        .lineLimit(1)
-                                        .underline(true, color: accentColor)
-                                }
-
-                                // TextField always present (hidden behind display text when not focused)
+                                // TextField always in tree (preserves focus state).
+                                // Hidden when unfocused so its scroll position doesn't bleed through.
                                 TextField("", text: $taskText)
                                     .font(.system(size: 24, weight: .black))
                                     .foregroundColor(accentColor)
                                     .focused($isTaskFieldFocused)
                                     .textFieldStyle(.plain)
-                                    .lineLimit(1)
                                     .opacity(isTaskFieldFocused ? 1 : 0)
+                                    .onChange(of: taskText) { _, _ in
+                                        if !hasEdited { hasEdited = true }
+                                    }
 
-                                // Display text when not focused: shows from start, truncated at tail
-                                if !isTaskFieldFocused && !taskText.isEmpty {
-                                    Text(taskText)
-                                        .font(.system(size: 24, weight: .black))
-                                        .foregroundColor(accentColor)
-                                        .lineLimit(1)
-                                        .truncationMode(.tail)
-                                        .contentShape(Rectangle())
-                                        .onTapGesture { isTaskFieldFocused = true }
+                                // Overlay when not focused: placeholder or display text (shows from start)
+                                if !isTaskFieldFocused {
+                                    Group {
+                                        if taskText.isEmpty {
+                                            Text(defaultTaskText)
+                                                .underline(!hasEdited, color: accentColor)
+                                        } else {
+                                            Text(taskText)
+                                                .truncationMode(.tail)
+                                        }
+                                    }
+                                    .font(.system(size: 24, weight: .black))
+                                    .foregroundColor(accentColor)
+                                    .lineLimit(1)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .contentShape(Rectangle())
+                                    .onTapGesture { isTaskFieldFocused = true }
                                 }
                             }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .clipShape(Rectangle())
                         }
 
                         // "[Day] at [Time]"
@@ -149,6 +155,7 @@ struct FirstReminderView: View {
                                 Text(dayString)
                                     .font(.system(size: 24, weight: .black))
                                     .foregroundColor(accentColor)
+                                    .underline(!hasEdited, color: accentColor)
                                     .lineLimit(1)
                                     .fixedSize()
                             }
@@ -158,6 +165,9 @@ struct FirstReminderView: View {
                                     .datePickerStyle(.graphical)
                                     .labelsHidden()
                                     .padding()
+                                    .onChange(of: selectedDate) { _, _ in
+                                        if !hasEdited { hasEdited = true }
+                                    }
                             }
 
                             Text("at")
@@ -168,6 +178,7 @@ struct FirstReminderView: View {
                                 Text(timeString)
                                     .font(.system(size: 24, weight: .black))
                                     .foregroundColor(accentColor)
+                                    .underline(!hasEdited, color: accentColor)
                             }
                             .buttonStyle(.plain)
                             .popover(isPresented: $showTimePicker) {
@@ -175,11 +186,15 @@ struct FirstReminderView: View {
                                     .datePickerStyle(.graphical)
                                     .labelsHidden()
                                     .padding()
+                                    .onChange(of: selectedTime) { _, _ in
+                                        if !hasEdited { hasEdited = true }
+                                    }
                             }
                         }
                     }
                 }
                 .frame(width: 285, alignment: .leading)
+                .clipped()
                 .position(x: 600, y: 303)
 
                 // MARK: - Hint with character thumbnail (shown when task is empty)
