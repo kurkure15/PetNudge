@@ -41,6 +41,20 @@ final class ReminderScheduler: ObservableObject {
                 continue
             }
 
+            // Scheduled reminder that hasn't fired yet — check against scheduledFireDate
+            if let scheduledDate = preferences.reminders[i].scheduledFireDate,
+               preferences.reminders[i].lastTriggeredDate == nil {
+                if now >= scheduledDate {
+                    fireReminder(preferences.reminders[i])
+                    preferences.reminders[i].lastTriggeredDate = now
+                    preferences.reminders[i].snoozedUntil = nil
+                } else if scheduledDate.timeIntervalSince(now) <= 300 {
+                    anyApproaching = true
+                }
+                continue
+            }
+
+            // Interval-based logic for recurring reminders
             let last = preferences.reminders[i].lastTriggeredDate ?? Date.distantPast
             let interval = TimeInterval(preferences.reminders[i].intervalMinutes * 60)
             let elapsed = now.timeIntervalSince(last)

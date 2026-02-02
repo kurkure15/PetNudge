@@ -1,4 +1,5 @@
 import AppKit
+import CoreText
 import SwiftUI
 
 @MainActor
@@ -18,6 +19,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     )
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Register bundled fonts
+        registerBundledFonts()
+
         // Hide dock icon
         NSApp.setActivationPolicy(.accessory)
 
@@ -86,5 +90,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.activate(ignoringOtherApps: true)
 
         self.onboardingWindow = window
+    }
+
+    private func registerBundledFonts() {
+        let fontNames = ["SourceSerif4-Black"]
+        for fontName in fontNames {
+            guard let url = Bundle.main.url(forResource: fontName, withExtension: "ttf") else {
+                print("Font file \(fontName).ttf not found in bundle")
+                continue
+            }
+            var error: Unmanaged<CFError>?
+            if !CTFontManagerRegisterFontsForURL(url as CFURL, .process, &error) {
+                print("Failed to register font \(fontName): \(error?.takeRetainedValue().localizedDescription ?? "unknown error")")
+            }
+        }
     }
 }

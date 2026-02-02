@@ -49,9 +49,9 @@ struct FirstReminderView: View {
     private var hintText: String {
         switch character {
         case .dog:
-            return "Add what you want to me remind you\nabout in the white text."
+            return "Add what you want to me remind you\nabout in the white text"
         case .cat:
-            return "You can ask me to remind you before\n5, 10, or 15 minutes too."
+            return "You can ask me to remind you before\n5, 10, or 15 minutes too"
         case .redPanda:
             return "I can also remind you to take a nap\ntomorrow or on Wednesday"
         }
@@ -92,9 +92,9 @@ struct FirstReminderView: View {
             ZStack(alignment: .topLeading) {
                 // MARK: - Close button (top-left, 48x48 at 24,24)
                 Button(action: onClose) {
-                    Image(systemName: "xmark.circle")
-                        .font(.system(size: 20, weight: .black))
-                        .foregroundColor(.white)
+                    Image("ic_cross")
+                        .resizable()
+                        .interpolation(.high)
                         .frame(width: 48, height: 48)
                 }
                 .buttonStyle(.plain)
@@ -124,12 +124,19 @@ struct FirstReminderView: View {
                                 .font(.system(size: 20, weight: .heavy))
                                 .foregroundColor(.white)
 
-                            // Editable task text — SF Pro, weight 1000 (black), 24pt, accent color
+                            // Editable task text — SF Pro, weight 1000 (black), 24pt, accent color, underlined
                             TextField("", text: $taskText)
                                 .font(.system(size: 24, weight: .black))
                                 .foregroundColor(accentColor)
                                 .focused($isTaskFieldFocused)
                                 .textFieldStyle(.plain)
+                                .overlay(
+                                    Rectangle()
+                                        .frame(height: 0.5)
+                                        .foregroundColor(accentColor)
+                                        .opacity(isTaskFieldFocused ? 0 : 1),
+                                    alignment: .bottom
+                                )
                         }
 
                         // "[Day] at [Time]"
@@ -138,6 +145,7 @@ struct FirstReminderView: View {
                                 Text(dayString)
                                     .font(.system(size: 24, weight: .black))
                                     .foregroundColor(accentColor)
+                                    .underline(true, color: accentColor)
                             }
                             .buttonStyle(.plain)
 
@@ -149,6 +157,7 @@ struct FirstReminderView: View {
                                 Text(timeString)
                                     .font(.system(size: 24, weight: .black))
                                     .foregroundColor(accentColor)
+                                    .underline(true, color: accentColor)
                             }
                             .buttonStyle(.plain)
                         }
@@ -157,15 +166,27 @@ struct FirstReminderView: View {
                 .frame(width: 285, alignment: .leading)
                 .position(x: 600, y: 303)
 
+                // MARK: - "Set Reminder" button (below sentence builder)
+                Button(action: createReminder) {
+                    Text("Set Reminder")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.white)
+                        .frame(width: 285)
+                        .padding(.vertical, 24)
+                        .background(Color(hex: character.buttonHex))
+                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                .position(x: 600, y: 430)
+
                 // MARK: - Hint with character thumbnail (bottom-right)
                 HStack(alignment: .center, spacing: 8) {
-                    // Character thumbnail (~38x37)
-                    Image(character.circleImageName)
+                    // Character message thumbnail (~36x36)
+                    Image(character.messageImageName)
                         .resizable()
                         .interpolation(.high)
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 38, height: 37)
-                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 36, height: 36)
 
                     // Hint text — SF Pro Rounded, 700 weight (bold), 10pt, accent color
                     Text(hintText)
@@ -197,6 +218,24 @@ struct FirstReminderView: View {
             if taskText.isEmpty {
                 taskText = defaultTaskText
             }
+            // Set per-character default date
+            if character == .redPanda {
+                selectedDate = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
+            }
+            // Set per-character default time
+            var timeComponents = Calendar.current.dateComponents([.year, .month, .day], from: Date())
+            switch character {
+            case .dog:
+                timeComponents.hour = 10
+                timeComponents.minute = 0
+            case .cat:
+                timeComponents.hour = 18
+                timeComponents.minute = 0
+            case .redPanda:
+                timeComponents.hour = 11
+                timeComponents.minute = 30
+            }
+            selectedTime = Calendar.current.date(from: timeComponents) ?? selectedTime
         }
         .sheet(isPresented: $showDatePicker) {
             DatePickerSheet(
@@ -249,8 +288,9 @@ struct FirstReminderView: View {
         let reminder = Reminder(
             category: .custom,
             customTitle: taskText,
-            intervalMinutes: nil,
-            isEnabled: true
+            intervalMinutes: 60,
+            isEnabled: true,
+            scheduledFireDate: reminderDate
         )
         onReminderCreated(reminder)
     }

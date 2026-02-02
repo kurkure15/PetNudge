@@ -8,6 +8,7 @@ struct Reminder: Codable, Identifiable, Equatable {
     var isEnabled: Bool
     var lastTriggeredDate: Date?
     var snoozedUntil: Date?
+    var scheduledFireDate: Date?
 
     var displayTitle: String {
         if let custom = customTitle, category == .custom {
@@ -21,6 +22,10 @@ struct Reminder: Codable, Identifiable, Equatable {
         if let snoozed = snoozedUntil, snoozed > Date() {
             return snoozed
         }
+        // If scheduled and never triggered, fire at the scheduled date
+        if let scheduled = scheduledFireDate, lastTriggeredDate == nil {
+            return scheduled
+        }
         let base = lastTriggeredDate ?? Date()
         return base.addingTimeInterval(TimeInterval(intervalMinutes * 60))
     }
@@ -30,7 +35,8 @@ struct Reminder: Codable, Identifiable, Equatable {
         category: ReminderCategory,
         customTitle: String? = nil,
         intervalMinutes: Int? = nil,
-        isEnabled: Bool = true
+        isEnabled: Bool = true,
+        scheduledFireDate: Date? = nil
     ) {
         self.id = id
         self.category = category
@@ -39,5 +45,6 @@ struct Reminder: Codable, Identifiable, Equatable {
         self.isEnabled = isEnabled
         self.lastTriggeredDate = nil
         self.snoozedUntil = nil
+        self.scheduledFireDate = scheduledFireDate
     }
 }

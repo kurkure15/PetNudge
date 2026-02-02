@@ -18,7 +18,6 @@ struct CharacterSelectionView: View {
                     Image("ic_cross")
                         .resizable()
                         .interpolation(.high)
-                        .frame(width: 24, height: 24)
                         .frame(width: 48, height: 48)
                 }
                 .buttonStyle(.plain)
@@ -38,7 +37,7 @@ struct CharacterSelectionView: View {
 
                 // Large decorative character name with gradient fill
                 Text(selectedCharacter.displayName)
-                    .font(.custom("Source Serif Pro", size: selectedCharacter.nameFontSize).weight(.black))
+                    .font(.custom("SourceSerif4-Black", size: selectedCharacter.nameFontSize))
                     .foregroundStyle(nameGradient)
                     .shadow(
                         color: Color(
@@ -127,7 +126,7 @@ struct CharacterSelectionView: View {
                     .buttonStyle(.plain)
                 }
                 .frame(width: 604)
-                .position(x: 900, y: 385)
+                .position(x: 858, y: 385)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -170,12 +169,14 @@ struct CharacterSelectionView: View {
                     .frame(width: 144, height: 144)
 
                 // Character image clipped to circle, inside the inner ring
+                // .blendMode(.lighten) replaces black image background with gradient
                 Image(character.circleImageName)
                     .resizable()
                     .interpolation(.high)
                     .aspectRatio(contentMode: .fill)
                     .frame(width: 140, height: 140)
                     .clipShape(Circle())
+                    .blendMode(.lighten)
             }
             .frame(width: 180, height: 180)
         } else {

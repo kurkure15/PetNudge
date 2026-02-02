@@ -59,6 +59,10 @@ enum PetCharacter: String, Codable, CaseIterable, Identifiable {
         return "\(assetPrefix)-Selected"
     }
 
+    var messageImageName: String {
+        return "\(assetPrefix)-Message"
+    }
+
     // MARK: - Design Tokens (from Figma)
 
     /// Character name font size — Blue is 208pt (shorter name), others 160pt
