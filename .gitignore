@@ -17,3 +17,6 @@ DerivedData/
 
 # MCP config (contains API keys)
 .mcp.json
+
+# Claude Code local settings (permissions, not shared)
+.claude/settings.local.json

@@ -1,5 +1,88 @@
 import SwiftUI
 
+// MARK: - NSTextField subclass that places cursor at end on focus (no select-all)
+
+fileprivate class CursorAtEndTextField: NSTextField {
+    override func becomeFirstResponder() -> Bool {
+        let result = super.becomeFirstResponder()
+        if result {
+            DispatchQueue.main.async { [weak self] in
+                guard let self, let editor = self.currentEditor() else { return }
+                editor.selectedRange = NSRange(location: self.stringValue.count, length: 0)
+            }
+        }
+        return result
+    }
+}
+
+fileprivate struct CursorAtEndTextFieldView: NSViewRepresentable {
+    @Binding var text: String
+    @Binding var isFocused: Bool
+    var font: NSFont
+    var textColor: NSColor
+
+    func makeNSView(context: Context) -> CursorAtEndTextField {
+        let textField = CursorAtEndTextField()
+        textField.delegate = context.coordinator
+        textField.font = font
+        textField.textColor = textColor
+        textField.backgroundColor = .clear
+        textField.isBordered = false
+        textField.isBezeled = false
+        textField.focusRingType = .none
+        textField.drawsBackground = false
+        textField.lineBreakMode = .byClipping
+        textField.cell?.isScrollable = true
+        textField.cell?.wraps = false
+        return textField
+    }
+
+    func updateNSView(_ textField: CursorAtEndTextField, context: Context) {
+        if textField.stringValue != text {
+            textField.stringValue = text
+        }
+        textField.font = font
+        textField.textColor = textColor
+
+        // Drive focus from SwiftUI state — make first responder and cursor at end
+        let isCurrentlyEditing = textField.currentEditor() != nil
+        if isFocused && !isCurrentlyEditing {
+            textField.window?.makeFirstResponder(textField)
+            DispatchQueue.main.async {
+                if let editor = textField.currentEditor() {
+                    editor.selectedRange = NSRange(location: textField.stringValue.count, length: 0)
+                }
+            }
+        } else if !isFocused && isCurrentlyEditing {
+            textField.window?.makeFirstResponder(nil)
+        }
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(text: $text, isFocused: $isFocused)
+    }
+
+    class Coordinator: NSObject, NSTextFieldDelegate {
+        var text: Binding<String>
+        var isFocused: Binding<Bool>
+
+        init(text: Binding<String>, isFocused: Binding<Bool>) {
+            self.text = text
+            self.isFocused = isFocused
+        }
+
+        func controlTextDidChange(_ obj: Notification) {
+            if let textField = obj.object as? NSTextField {
+                text.wrappedValue = textField.stringValue
+            }
+        }
+
+        func controlTextDidEndEditing(_ obj: Notification) {
+            isFocused.wrappedValue = false
+        }
+    }
+}
+
 struct FirstReminderView: View {
     let character: PetCharacter
     let onReminderCreated: (Reminder) -> Void
@@ -17,7 +100,7 @@ struct FirstReminderView: View {
     @State private var showDatePicker = false
     @State private var showTimePicker = false
     @State private var hasEdited = false
-    @FocusState private var isTaskFieldFocused: Bool
+    @State private var isTaskFieldFocused: Bool = false
 
     // Default task text per character (from Figma)
     private var defaultTaskText: String {
@@ -114,17 +197,17 @@ struct FirstReminderView: View {
 
                             // Editable task text — SF Pro, weight 1000 (black), 24pt, accent color, single-line
                             ZStack(alignment: .leading) {
-                                // TextField always in tree (preserves focus state).
-                                // Hidden when unfocused so its scroll position doesn't bleed through.
-                                TextField("", text: $taskText)
-                                    .font(.system(size: 24, weight: .black))
-                                    .foregroundColor(accentColor)
-                                    .focused($isTaskFieldFocused)
-                                    .textFieldStyle(.plain)
-                                    .opacity(isTaskFieldFocused ? 1 : 0)
-                                    .onChange(of: taskText) { _, _ in
-                                        if !hasEdited { hasEdited = true }
-                                    }
+                                // Custom NSTextField that places cursor at end on focus (no select-all)
+                                CursorAtEndTextFieldView(
+                                    text: $taskText,
+                                    isFocused: $isTaskFieldFocused,
+                                    font: NSFont.systemFont(ofSize: 24, weight: .black),
+                                    textColor: NSColor(accentColor)
+                                )
+                                .opacity(isTaskFieldFocused ? 1 : 0)
+                                .onChange(of: taskText) { _, _ in
+                                    if !hasEdited { hasEdited = true }
+                                }
 
                                 // Overlay when not focused: placeholder or display text (shows from start)
                                 if !isTaskFieldFocused {
@@ -222,6 +305,7 @@ struct FirstReminderView: View {
                             .resizable()
                             .interpolation(.high)
                             .frame(width: 48, height: 48)
+                            .symbolEffect(.breathe.plain.byLayer, options: .repeat(.continuous))
                     }
                     .buttonStyle(.plain)
                     .position(x: 1112 + 24, y: 568 + 24)
